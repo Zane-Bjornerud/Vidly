@@ -4,13 +4,11 @@
 //update an existing genre
 //delete an existing genre
 const Joi = require('joi');
-
 const express = require('express');
 const app = express();
 const genres = require('./routes/genres');
 
 app.use(express.json());
-
 app.use('/api/genres', genres);
 
 app.use(function(req,res, next) {

@@ -2,7 +2,9 @@ const express = require('express');
 const router = express.Router();
 
 const genres = [
-    {id: 1, name: 'genre1'}
+    {id: 1, name: 'Action'},
+    {id: 2, name: 'Horror'},
+    {id: 3, name: 'Romance'},
 ]
 
 function validateGenre(genre) {
@@ -21,7 +23,6 @@ router.get('/', (req, res) => {
 //create a new genre
 router.post('/', (req, res) => {
     const { error } = validateGenre(req.body);
-
     if(error) return res.status(400).send(error.details[0].message);
 
     const genre = {
