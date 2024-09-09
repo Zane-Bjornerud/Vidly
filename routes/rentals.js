@@ -11,6 +11,14 @@ router.get('/', async (req, res) => {
     res.send(rentals);
 }); 
 
+router.get("/:id", validateObjectId, async (req, res) => {
+    const rental = await Rental.findById(req.params.id);
+  
+    if (!rental) {
+      return res.status(404).send("The rental with the given ID was not found.");
+    } else res.send(rental);
+  });
+
 //create a new rental
 router.post('/', async (req, res) => {
     const { error } = validate(req.body);
@@ -22,23 +30,40 @@ router.post('/', async (req, res) => {
     const movie = await Movie.findById(req.body.movieId);
     if (!movie) return res.status(400).send('Invalid movie'); //want to make sure the movieId the client sends is valid
 
-    let rental = new Rental({ 
-        customer: {
-            _id: customer._id,
-            name: customer.name,
-            isGold: customer.isGold,
-            phone: customer.phone
-        },
-        movie: {
-            _id: movie._id,
-            title: movie.title,
-            dailyRentalRate: movie.dailyRentalRate
-        }
+    const session = await Rental.startSession();
+  if (!session)
+    return res
+      .status(500)
+      .send("Internal Server Error: Unable to start a database session.");
+
+  session.startTransaction();
+
+  try {
+    const rental = new Rental({
+      customer: {
+        _id: customer._id,
+        name: customer.name,
+        phone: customer.phone,
+      },
+      movie: {
+        _id: movie._id,
+        title: movie.title,
+        dailyRentalRate: movie.dailyRentalRate,
+      },
     });
-    rental = await rental.save();
+
+    await rental.save({ session });
 
     movie.numberInStock--;
-    movie.save();
+    await movie.save({ session });
 
-    res.send(rental);
+    await session.commitTransaction();
+
+    res.status(201).send(rental);
+  } catch (ex) {
+    await session.abortTransaction();
+    res.status(500).send(ex.message);
+  } finally {
+    session.endSession();
+  }
 });
