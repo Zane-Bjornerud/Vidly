@@ -4,10 +4,10 @@
 //update an existing genre
 //delete an existing genre
 const mongoose = require('mongoose');
-
 const express = require('express');
 const app = express();
 const genres = require('./routes/genres');
+const customers = require('./routes/customers');
 
 mongoose.connect('mongodb://localhost/vidly')
     .then(() => console.log('Connected to MongoDB... '))
@@ -15,6 +15,7 @@ mongoose.connect('mongodb://localhost/vidly')
 
 app.use(express.json());
 app.use('/api/genres', genres);
+app.use('/api/custoemrs', customers);
 
 app.use(function(req,res, next) {
     console.log('Logging... ');
